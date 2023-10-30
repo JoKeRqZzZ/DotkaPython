@@ -139,12 +139,18 @@ items = {
     'Scythe of Vyse': {"Price": 400}
 }
 
+lanes = {
+    "Top",
+    "Middlane",
+    "Bottom"
+}
 def choose_hero():
     print("Choose a hero:")
-    for hero in heroes.keys():
+    for hero in heroes:
         print(hero)
     hero_name = input("Enter the name of the hero: ")
     return hero_name
+
 
 def choose_items(hero):
     hero_coins = 600
@@ -169,7 +175,7 @@ def choose_items(hero):
         hero_coins -= item_price
     return chosen_items
 
-def battle(hero, enemy):
+def battle(hero, enemy,):
     hero_health = heroes[hero]["Health"]
     enemy_health = heroes[enemy]["Health"]
     print(f"начинается сражение между  {hero} и {enemy}")
@@ -195,6 +201,7 @@ def battle(hero, enemy):
     else:
         print(f"{hero} победил!")
 
+
 def Game():
     hero_name = choose_hero()
     hero = heroes.get(hero_name)
@@ -203,8 +210,11 @@ def Game():
         return
     chosen_items = choose_items(hero)
     print(f"Chosen items: {chosen_items}")
-    enemy = random.choice(list(heroes.keys()))
-    battle(hero_name, enemy)
+
+    for i in range(5):
+        enemy = random.choice(list(heroes.keys()))
+        battle(hero_name, enemy)
+
 
 Game()
 
