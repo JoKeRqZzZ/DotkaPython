@@ -1,4 +1,7 @@
 import random
+import random
+import json
+import csv
 heroes = {
     'Abaddon': {"Primary Attribute": "Universal", "Role": ["pos4", "pos5"], "Health": 604},
     'Alchemist': {"Primary Attribute": "Strength", "Role": ["pos1", "pos2", "pos3"], "Health": 625},
@@ -145,10 +148,10 @@ lanes = {
     "Bottom"
 }
 def choose_hero():
-    print("Choose a hero:")
+    print("Выберите героя:")
     for hero in heroes:
         print(hero)
-    hero_name = input("Enter the name of the hero: ")
+    hero_name = input("Введите имя героя: ")
     return hero_name
 
 
@@ -156,36 +159,43 @@ def choose_items(hero):
     hero_coins = 600
     chosen_items = []
     while hero_coins > 0:
-        print(f"Current coins: {hero_coins}")
-        print("Choose an item:")
+        print(f"Ваши монеты: {hero_coins}")
+        print("Выберите предмет:")
         for item, data in items.items():
             if data["Price"] <= hero_coins:
-                print(f"{item} - {data['Price']} coins")
-        item_name = input("Enter the name of the item (leave blank to end): ")
+                print(f"{item} - {data['Price']} coins, Damage: {data['Damage']}")
+        item_name = input("Напишите названия предмета ")
         if item_name == "":
             break
         if item_name not in items.keys():
-            print("Invalid item name. Please try again.")
+            print("попробуйте еще.")
             continue
         item_price = items[item_name]["Price"]
         if item_price > hero_coins:
-            print("You don't have enough coins for this item. Please choose another one.")
+            print("у вас нет монет для этого.")
             continue
         chosen_items.append(item_name)
         hero_coins -= item_price
     return chosen_items
 
-def battle(hero, enemy,):
+def choise_lane(hero):
+    print("выберите линию")
+    for lane in lanes:
+        print(lane)
+    lane_name = input("введите линию куда пойти: ")
+    return lane_name
+
+def battle(hero, enemy, lanes):
     hero_health = heroes[hero]["Health"]
     enemy_health = heroes[enemy]["Health"]
-    print(f"начинается сражение между  {hero} и {enemy}")
+    print(f"начинается сражение между  {hero} и {enemy} на {lanes} линии")
     print(f"{hero}: {hero_health} HP")
     print(f"{enemy}: {enemy_health} HP")
     while hero_health > 0 and enemy_health > 0:
-        print("выберите че делать:")
+        print("доступные действия:")
         print("1.атака")
         print("2.защита")
-        action = input("Enter your choice: ")
+        action = input("Введите ваши действия: ")
         if action == "1":
             enemy_health -= random.randint(40, 60)
         elif action == "2":
@@ -201,19 +211,56 @@ def battle(hero, enemy,):
     else:
         print(f"{hero} победил!")
 
+def save_game(data, filename="save.json"):
+    with open(filename, "w") as file:
+        json.dump(data, file)
+
+def load_game(filename="save.json"):
+    try:
+        with open(filename, "r") as file:
+            data = json.load(file)
+        return data
+    except FileNotFoundError:
+        print("сохраненный файл не найден.")
+        return None
+
+def write_to_csv(data, filename="game_data.csv"):
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Hero", "Items", "Lane", "Result"])
+        for game_result in data:
+            writer.writerow([game_result["hero"], ", ".join(game_result["items"]), game_result["lane"], game_result["result"]])
 
 def Game():
+    game_data = load_game() or []
+
     hero_name = choose_hero()
     hero = heroes.get(hero_name)
     if hero is None:
-        print("Invalid hero name. Exiting...")
+        print("Ошибочка")
         return
     chosen_items = choose_items(hero)
-    print(f"Chosen items: {chosen_items}")
-
-    for i in range(5):
+    print(f"Выбранные предметы: {chosen_items}")
+    lane_name = choise_lane(hero)
+    lane = lanes.get(lane_name)
+    if lane is None:
+        print("Ошибочка")
+        return
+    for i in range(3):
         enemy = random.choice(list(heroes.keys()))
-        battle(hero_name, enemy)
+        battle_result = battle(hero_name, enemy, lane_name)
+
+        game_result = {
+            "hero": hero_name,
+            "items": chosen_items,
+            "lane": lane_name,
+            "result": f"{hero_name} победил!" if battle_result == hero_name else f"{enemy} победил!"
+        }
+        game_data.append(game_result)
+        save_game(game_data)
+
+
+    write_to_csv(game_data)
 
 
 Game()
